@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,6 +8,10 @@ import sklearn.metrics as skmet
 import scipy.optimize as opt
 from scipy.optimize import curve_fit
 import errors as err
+
+# Defining Functions
+
+# 1. Read Data
 
 
 def read_data(data_name):
@@ -24,6 +29,9 @@ def read_data(data_name):
     return data_final, data_country_col
 
 
+# 2. Normalizes an array of values
+
+
 def norm(array):
     """
     Function normalises an array of values
@@ -35,6 +43,8 @@ def norm(array):
     scaled = (array-min_val) / (max_val-min_val)
 
     return scaled
+
+# 3. Normalizing the dataframe, calling the array
 
 
 def norm_df(df, first=0, last=None):
@@ -50,8 +60,10 @@ def norm_df(df, first=0, last=None):
     return df
 
 
+# 4. Heat Map
+
 def heat_corr(df, size=10):
-    """Function creates heatmap of correlation matrix for each pair of columns 
+    """Function creates heatmap of correlation matrix for each pair of columns
     in the dataframe.
     Input:
         df: pandas DataFrame
@@ -66,10 +78,13 @@ def heat_corr(df, size=10):
     plt.show()
 
 
+# 5. Error Ranges
+
+
 def err_ranges(x, func, param, sigma):
     """
     Calculates the upper and lower limits for the function, parameters and
-    sigmas for single value or array x. Functions values are calculated for 
+    sigmas for single value or array x. Functions values are calculated for
     all combinations of +/- sigma and the minimum and maximum is determined.
     Can be used for all number of parameters and sigmas >=1.
 
@@ -98,12 +113,15 @@ def err_ranges(x, func, param, sigma):
     return lower, upper
 
 
-def gdp_fit(x, a, b, c):
+# 6. Fitting function
+
+
+def logistic(t, N0, k, t0):
     """
     Function defining fitting
 
     """
-    return (a*x**2) + (b*x) + c
+    return N0 / (1 + np.exp(-k*(t-t0)))
 
 
 # Range of year
@@ -152,6 +170,9 @@ plt.tight_layout()
 plt.show()
 
 
+# 1. Clustering
+
+
 df_fitting = final_df[["Agricultural land", "Arable Land"]].copy()
 
 df_fitting = norm_df(df_fitting)
@@ -195,28 +216,11 @@ plt.title("Cluster Diagram with 3 clusters", fontsize=15)
 plt.legend(loc='best')
 plt.show()
 
-'''
-# Retrieving values for cluster 0, 1, 2
-cluster_zero = pd.DataFrame()
-cluster_one = pd.DataFrame()
-cluster_two = pd.DataFrame()
-
-# Selecting Population data for fitting
-cluster_zero['Arable Land(0)'] = cluster_df[cluster_df['Cluster']
-                                            == 0]['Arable Land']
-cluster_one['Arable Land(1)'] = cluster_df[cluster_df['Cluster']
-                                           == 1]['Arable Land']
-cluster_two['Population(2)'] = cluster_df[cluster_df['Cluster']
-                                          == 2]['Arable Land']
-
-print(cluster_zero)
-print(cluster_two)
-print(cluster_one)
-'''
+# Plotting second cluster graph with 4 clusters
 df_fitting1 = final_df[["Urban Population", "Population, Total"]].copy()
 df_fitting1 = norm_df(df_fitting1)
 
-# Since silhouette score is highest for 3 , clustering for number = 3
+# Clustering for number = 4
 kmeans = cluster.KMeans(n_clusters=4)
 kmeans.fit(df_fitting1)
 
@@ -235,6 +239,7 @@ for ic in range(4):
     xc, yc = cen[ic, :]
     plt.plot(xc, yc, "dk", markersize=10, label=f"Cluster {ic}")
 
+# Plotting a scatter plot specifying titles and lables
 plt.scatter(df_fitting1['Urban Population'], df_fitting1['Population, Total'],
             c=labels, cmap='autumn', label='Data points')
 plt.xlabel('Urban Population')
@@ -244,39 +249,14 @@ plt.legend(loc='best')
 plt.show()
 
 
-'''
-# Data for fitting
-df_fitting = final_df[["Agricultural land", "Arable Land"]].copy()
-
-# Normalizing data for fitting
-df_fitting = norm_df(df_fitting)
-
-# Fitting parameters to the data
-x = df_fitting["Agricultural land"].values
-y = df_fitting["Arable Land"].values
-popt, pcov = opt.curve_fit(gdp_fit, x, y)
-
-# Plotting the data and the fitted curve
-
-#  plt.scatter(x, y)
-plt.plot(x, gdp_fit(x, *popt), 'r-', label='fit: a=%5.3f, b=%5.3f, c=%5.3f' % tuple(popt))
-plt.xlabel("Agricultural land")
-plt.ylabel("Arable Land")
-plt.legend()
-plt.show()
-'''
-# Fitting
+# 2. Fitting
 
 
 # Load the data into a pandas dataframe
 df = pd.read_csv("Urban Total (% of total population).csv", skiprows=4)
 
 # Extract data for India and the years 1960 to 2020
-india_data = df[df["Country Name"]=="India"].loc[:, "1960":"2020"].squeeze()
-
-# Define the function to fit to the data
-def logistic(t, N0, k, t0):
-    return N0 / (1 + np.exp(-k*(t-t0)))
+india_data = df[df["Country Name"] == "India"].loc[:, "1960":"2020"].squeeze()
 
 # Convert the years to integers
 years = india_data.index.astype(int)
@@ -286,52 +266,23 @@ popt, pcov = curve_fit(logistic, years, india_data, p0=(20, 0.1, 1970))
 
 # Plot the data and the fitted curve
 plt.plot(years, india_data, label="India")
-# plt.plot(years, logistic(years, *popt), label="Fitted curve")
 
 # Generate prediction values for years beyond 2020
 future_years = np.arange(1960, 2031, 1)
 
 future_predictions = logistic(future_years, *popt)
 
-# Plot the future predictions
-plt.plot(future_years, future_predictions, label="Future predictions")
+# Plot the ffitted curve
+plt.plot(years, logistic(years, *popt), label="Fitted Curve")
 
 # Highlight the fitted curve
 low = logistic(future_years, *(popt - 0.5 * np.sqrt(np.diag(pcov))))
 up = logistic(future_years, *(popt + 0.5 * np.sqrt(np.diag(pcov))))
-plt.fill_between(future_years, low, up, alpha=0.2)
+plt.fill_between(future_years, low, up, alpha=0.2, color='green',
+                 label="Future predictions")
 
 plt.legend()
 plt.xlabel("Year")
 plt.ylabel("Urban population (% of total population)")
 plt.title('Indian Urban Population')
 plt.show()
-
-'''
-# extend years for prediction
-years = np.arange(1960, 2041)
-
-# calculate sigma
-sigmas = np.sqrt(np.diag(pcov))
-
-# calculate upper and lower limits
-lower, upper = err.err_ranges(years, logistic, popt, sigmas)
-
-# plot error ranges
-plt.fill_between(years, lower, upper, color='orange', alpha=0.5)
-
-# set ticks and limit
-plt.xticks(range(1960, 2041, 10))
-plt.xlim(1960, 2040)
-# label and title
-plt.xlabel('Years')
-plt.ylabel("Urban population (% of total population)")
-plt.title('Indian Urban Population')
-
-# show legend
-plt.legend(fancybox=True, shadow=True, borderpad=0.5, framealpha=0.85,
-           labelcolor='linecolor')
-# saving
-# plt.savefig('Canada Fitting.png', dpi=650, bbox_inches='tight')
-# show the plot
-plt.show()'''
