@@ -163,11 +163,13 @@ final_df.replace(np.nan, 0, inplace=True)
 
 # Calling function to generate heatmap
 heat_corr(final_df, 9)
+plt.savefig('Heatmap.png')
 
 # Plotting scatter plots for the indicators
 pd.plotting.scatter_matrix(final_df, figsize=(9.0, 9.0))
 plt.tight_layout()
 plt.show()
+plt.savefig('Scatter Matrix.png')
 
 
 # 1. Clustering
@@ -215,6 +217,7 @@ plt.ylabel("Arable Land", fontsize=15)
 plt.title("Cluster Diagram with 3 clusters", fontsize=15)
 plt.legend(loc='best')
 plt.show()
+plt.savefig('Cluster1.png')
 
 # Plotting second cluster graph with 4 clusters
 df_fitting1 = final_df[["Urban Population", "Population, Total"]].copy()
@@ -247,6 +250,7 @@ plt.ylabel('Population, Total')
 plt.title("Cluster Diagram with 4 clusters", fontsize=15)
 plt.legend(loc='best')
 plt.show()
+plt.savefig('Cluster2.png')
 
 
 # 2. Fitting
@@ -286,3 +290,4 @@ plt.xlabel("Year")
 plt.ylabel("Urban population (% of total population)")
 plt.title('Indian Urban Population')
 plt.show()
+plt.savefig('Fitting Curve.png')
