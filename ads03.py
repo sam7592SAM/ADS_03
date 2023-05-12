@@ -2,9 +2,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.cluster as cluster
+from sklearn.cluster import KMeans
 import sklearn.metrics as skmet
 import scipy.optimize as opt
 from scipy.optimize import curve_fit
+import errors as err
 
 
 def read_data(data_name):
@@ -104,7 +106,6 @@ def gdp_fit(x, a, b, c):
     return (a*x**2) + (b*x) + c
 
 
-
 # Range of year
 years = [str(num) for num in list(range(1990, 2020))]
 
@@ -121,7 +122,6 @@ arab_df = arab_land.loc[:, arab_land.columns.isin(years)]
 forest_df = forest_ar.loc[:, forest_ar.columns.isin(years)]
 poptot_df = pop_tot.loc[:, urb_tot.columns.isin(years)]
 urbtot_df = urb_tot.loc[:, urb_tot.columns.isin(years)]
-
 
 
 # Filtering value for first 40 countries
@@ -156,6 +156,7 @@ df_fitting = final_df[["Agricultural land", "Arable Land"]].copy()
 
 df_fitting = norm_df(df_fitting)
 
+
 for ic in range(2, 7):
     # set up kmeans and fit
     kmeans = cluster.KMeans(n_clusters=ic)
@@ -180,12 +181,12 @@ cluster_df['Cluster'] = labels
 plt.figure(figsize=(9.0, 9.0))
 # Plotting scatter plot
 plt.scatter(df_fitting["Agricultural land"], df_fitting["Arable Land"],
-            c=labels, cmap="Accent", )
+            c=labels, cmap="Accent", label='Data Points')
 
 # Plotting cluster centre for 3 clusters
 for ic in range(3):
     xc, yc = cen[ic, :]
-    plt.plot(xc, yc, "dk", markersize=10)
+    plt.plot(xc, yc, "dk", markersize=10, label=f"Cluster {ic}")
 
 
 plt.xlabel("Agricultural land", fontsize=15)
@@ -194,6 +195,7 @@ plt.title("Cluster Diagram with 3 clusters", fontsize=15)
 plt.legend(loc='best')
 plt.show()
 
+'''
 # Retrieving values for cluster 0, 1, 2
 cluster_zero = pd.DataFrame()
 cluster_one = pd.DataFrame()
@@ -210,6 +212,37 @@ cluster_two['Population(2)'] = cluster_df[cluster_df['Cluster']
 print(cluster_zero)
 print(cluster_two)
 print(cluster_one)
+'''
+df_fitting1 = final_df[["Urban Population", "Population, Total"]].copy()
+df_fitting1 = norm_df(df_fitting1)
+
+# Since silhouette score is highest for 3 , clustering for number = 3
+kmeans = cluster.KMeans(n_clusters=4)
+kmeans.fit(df_fitting1)
+
+# extract labels and cluster centres
+labels = kmeans.labels_
+cen = kmeans.cluster_centers_
+
+# Adding column with cluster information
+cluster_df = df_fitting1
+cluster_df['Cluster'] = labels
+
+plt.figure(figsize=(9.0, 9.0))
+
+# Plotting cluster centre for 4 clusters
+for ic in range(4):
+    xc, yc = cen[ic, :]
+    plt.plot(xc, yc, "dk", markersize=10, label=f"Cluster {ic}")
+
+plt.scatter(df_fitting1['Urban Population'], df_fitting1['Population, Total'],
+            c=labels, cmap='autumn', label='Data points')
+plt.xlabel('Urban Population')
+plt.ylabel('Population, Total')
+plt.title("Cluster Diagram with 4 clusters", fontsize=15)
+plt.legend(loc='best')
+plt.show()
+
 
 '''
 # Data for fitting
@@ -232,6 +265,8 @@ plt.ylabel("Arable Land")
 plt.legend()
 plt.show()
 '''
+# Fitting
+
 
 # Load the data into a pandas dataframe
 df = pd.read_csv("Urban Total (% of total population).csv", skiprows=4)
@@ -251,9 +286,52 @@ popt, pcov = curve_fit(logistic, years, india_data, p0=(20, 0.1, 1970))
 
 # Plot the data and the fitted curve
 plt.plot(years, india_data, label="India")
-plt.plot(years, logistic(years, *popt), label="Fitted curve")
+# plt.plot(years, logistic(years, *popt), label="Fitted curve")
+
+# Generate prediction values for years beyond 2020
+future_years = np.arange(1960, 2031, 1)
+
+future_predictions = logistic(future_years, *popt)
+
+# Plot the future predictions
+plt.plot(future_years, future_predictions, label="Future predictions")
+
+# Highlight the fitted curve
+low = logistic(future_years, *(popt - 0.5 * np.sqrt(np.diag(pcov))))
+up = logistic(future_years, *(popt + 0.5 * np.sqrt(np.diag(pcov))))
+plt.fill_between(future_years, low, up, alpha=0.2)
+
 plt.legend()
 plt.xlabel("Year")
 plt.ylabel("Urban population (% of total population)")
 plt.title('Indian Urban Population')
 plt.show()
+
+'''
+# extend years for prediction
+years = np.arange(1960, 2041)
+
+# calculate sigma
+sigmas = np.sqrt(np.diag(pcov))
+
+# calculate upper and lower limits
+lower, upper = err.err_ranges(years, logistic, popt, sigmas)
+
+# plot error ranges
+plt.fill_between(years, lower, upper, color='orange', alpha=0.5)
+
+# set ticks and limit
+plt.xticks(range(1960, 2041, 10))
+plt.xlim(1960, 2040)
+# label and title
+plt.xlabel('Years')
+plt.ylabel("Urban population (% of total population)")
+plt.title('Indian Urban Population')
+
+# show legend
+plt.legend(fancybox=True, shadow=True, borderpad=0.5, framealpha=0.85,
+           labelcolor='linecolor')
+# saving
+# plt.savefig('Canada Fitting.png', dpi=650, bbox_inches='tight')
+# show the plot
+plt.show()'''
