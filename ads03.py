@@ -198,26 +198,35 @@ labels = kmeans.labels_
 cen = kmeans.cluster_centers_
 
 # Adding column with cluster information
-cluster_df = final_df
+cluster_df = df_fitting
 cluster_df['Cluster'] = labels
 
 plt.figure(figsize=(9.0, 9.0))
-# Plotting scatter plot
-plt.scatter(df_fitting["Agricultural land"], df_fitting["Arable Land"],
-            c=labels, cmap="Accent", label='Data Points')
 
-# Plotting cluster centre for 3 clusters
-for ic in range(3):
-    xc, yc = cen[ic, :]
-    plt.plot(xc, yc, "dk", markersize=10, label=f"Cluster {ic}")
 
+# Plotting cluster and scatter plot for 3 clusters
+plt.figure(figsize=(9.0, 9.0))
+plt.title("KMean Scatter Plot")
+dc1 = df_fitting[df_fitting.Cluster == 0]
+dc2 = df_fitting[df_fitting.Cluster == 1]
+dc3 = df_fitting[df_fitting.Cluster == 2]
+
+plt.scatter(dc1['Agricultural land'], dc1['Arable Land'],
+            label="Cluster 1", color='green')
+plt.scatter(dc2['Agricultural land'], dc2['Arable Land'],
+            label="Cluster 2", color='red')
+plt.scatter(dc3['Agricultural land'], dc3['Arable Land'],
+            label="Cluster 3", color='orange')
+
+plt.scatter(cen[:, 0], cen[:, 1], s=200, marker='*', label="Cluster Centres",
+            color='black')
 
 plt.xlabel("Agricultural land", fontsize=15)
 plt.ylabel("Arable Land", fontsize=15)
 plt.title("Cluster Diagram with 3 clusters", fontsize=15)
 plt.legend(loc='best')
 plt.show()
-plt.savefig('Cluster1.png')
+
 
 # Plotting second cluster graph with 4 clusters
 df_fitting1 = final_df[["Urban Population", "Population, Total"]].copy()
@@ -235,18 +244,29 @@ cen = kmeans.cluster_centers_
 cluster_df = df_fitting1
 cluster_df['Cluster'] = labels
 
+# Plotting cluster and scatter for four clusters
 plt.figure(figsize=(9.0, 9.0))
+plt.title("KMean Scatter Plot")
+dc1 = df_fitting1[df_fitting1.Cluster == 0]
+dc2 = df_fitting1[df_fitting1.Cluster == 1]
+dc3 = df_fitting1[df_fitting1.Cluster == 2]
+dc4 = df_fitting1[df_fitting1.Cluster == 3]
 
-# Plotting cluster centre for 4 clusters
-for ic in range(4):
-    xc, yc = cen[ic, :]
-    plt.plot(xc, yc, "dk", markersize=10, label=f"Cluster {ic}")
 
-# Plotting a scatter plot specifying titles and lables
-plt.scatter(df_fitting1['Urban Population'], df_fitting1['Population, Total'],
-            c=labels, cmap='autumn', label='Data points')
-plt.xlabel('Urban Population')
-plt.ylabel('Population, Total')
+plt.scatter(dc1['Urban Population'], dc1['Population, Total'],
+            label="Cluster 1", color='blue')
+plt.scatter(dc2['Urban Population'], dc2['Population, Total'],
+            label="Cluster 2", color='green')
+plt.scatter(dc3['Urban Population'], dc3['Population, Total'],
+            label="Cluster 3", color='orange')
+plt.scatter(dc4['Urban Population'], dc4['Population, Total'],
+            label="Cluster 4", color='red')
+
+plt.scatter(cen[:, 0], cen[:, 1], s=200, marker='*', label="Cluster Centres",
+            color='black')
+
+plt.xlabel('Urban Population', fontsize=15)
+plt.ylabel('Population, Total', fontsize=15)
 plt.title("Cluster Diagram with 4 clusters", fontsize=15)
 plt.legend(loc='best')
 plt.show()
